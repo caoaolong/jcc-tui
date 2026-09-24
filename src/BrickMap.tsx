@@ -1,10 +1,12 @@
 import React, { useMemo } from "react";
 import { Box, Text } from "ink";
-import { renderBrickBuffer, type Cell, type LabelMap } from "./buffer.js";
+import type { BoardMap } from "./board.js";
+import { renderBrickBuffer, type Cell, type PriceByName } from "./buffer.js";
 
 type Props = {
   focusedId: string | null;
-  labels: LabelMap;
+  board: BoardMap;
+  priceByName?: PriceByName;
 };
 
 /** 把同行同色格子合并成一段，减少 Text 节点数量 */
@@ -28,8 +30,11 @@ function compressRow(cells: Cell[]): Array<{ key: string; cell: Cell; text: stri
   return parts;
 }
 
-export function BrickMap({ focusedId, labels }: Props) {
-  const frame = useMemo(() => renderBrickBuffer(focusedId, labels), [focusedId, labels]);
+export function BrickMap({ focusedId, board, priceByName }: Props) {
+  const frame = useMemo(
+    () => renderBrickBuffer(focusedId, board, priceByName),
+    [focusedId, board, priceByName],
+  );
 
   return (
     <Box flexDirection="column">

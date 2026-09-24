@@ -1,6 +1,7 @@
 import type { UnitInfo } from "./units/types.js";
 import type { TraitInfo, TraitLevel } from "./traits/types.js";
-import type { LabelMap } from "./buffer.js";
+import type { BoardMap, BenchSlots } from "./board.js";
+import { uniqueNamesOnField } from "./board.js";
 
 export type ActiveTraitRow = {
   name: string;
@@ -15,19 +16,16 @@ export type ActiveTraitRow = {
 };
 
 /**
- * 根据棋盘放置统计羁绊：同名弈子只计一次。
+ * 根据棋盘 + 备战席统计羁绊：同名弈子只计一次（与星级无关）。
  */
 export function computeActiveTraits(
-  labels: LabelMap,
+  board: BoardMap,
+  bench: BenchSlots,
   units: UnitInfo[],
   traits: TraitInfo[],
 ): ActiveTraitRow[] {
   const unitByName = new Map(units.map((u) => [u.name, u]));
-  const uniqueNames = new Set(
-    Object.values(labels)
-      .map((n) => n?.trim())
-      .filter((n): n is string => Boolean(n)),
-  );
+  const uniqueNames = uniqueNamesOnField(board, bench);
 
   const counts = new Map<string, number>();
   for (const name of uniqueNames) {

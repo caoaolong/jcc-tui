@@ -1,4 +1,6 @@
 import { BRICKS, brickToRect, type BrickCell } from "./brick.js";
+import type { BoardMap, Star } from "./board.js";
+import { borderColorForCost } from "./costColors.js";
 import { charDisplayWidth, displayWidth, truncateToDisplayWidth } from "./textWidth.js";
 
 export type Cell = {
@@ -27,7 +29,8 @@ type BoxChars = {
   v: string;
 };
 
-const BOX_NORMAL: BoxChars = {
+/** 1 星：单线 */
+const BOX_1: BoxChars = {
   tl: "┌",
   tr: "┐",
   bl: "└",
@@ -36,7 +39,8 @@ const BOX_NORMAL: BoxChars = {
   v: "│",
 };
 
-const BOX_FOCUS: BoxChars = {
+/** 2 星：双线 */
+const BOX_2: BoxChars = {
   tl: "╔",
   tr: "╗",
   bl: "╚",
@@ -45,12 +49,38 @@ const BOX_FOCUS: BoxChars = {
   v: "║",
 };
 
+/** 3 星：粗线（视觉上最重，表示三线框） */
+const BOX_3: BoxChars = {
+  tl: "┏",
+  tr: "┓",
+  bl: "┗",
+  br: "┛",
+  h: "━",
+  v: "┃",
+};
+
+function boxForStars(stars: Star | null, emptyFocused: boolean): BoxChars {
+  if (stars === 3) return BOX_3;
+  if (stars === 2) return BOX_2;
+  if (stars === 1) return BOX_1;
+  // 空格子：焦点用双线提示选中，否则单线
+  return emptyFocused ? BOX_2 : BOX_1;
+}
+
+/** @deprecated 兼容旧名；请用 BoardMap */
 export type LabelMap = Record<string, string>;
 
+/** 棋子名 → 费用 */
+export type PriceByName = Map<string, number | null>;
+
 /**
- * 砖墙式交错矩形：只画边框；标签优先用选中的棋子名。
+ * 砖墙式交错矩形：边框颜色=费用，线型=星级。
  */
-export function renderBrickBuffer(focusedId: string | null, labels: LabelMap = {}): Frame {
+export function renderBrickBuffer(
+  focusedId: string | null,
+  board: BoardMap = {},
+  priceByName?: PriceByName,
+): Frame {
   const placed = BRICKS.map((brick) => ({
     brick,
     rect: brickToRect(brick.col, brick.row),
@@ -83,8 +113,13 @@ export function renderBrickBuffer(focusedId: string | null, labels: LabelMap = {
 
   const paintRect = (brick: BrickCell, x: number, y: number, w: number, h: number) => {
     const focused = brick.id === focusedId;
-    const color = focused ? brick.focusColor : brick.color;
-    const box = focused ? BOX_FOCUS : BOX_NORMAL;
+    const piece = board[brick.id];
+    const unitName = piece?.name?.trim() || "";
+    const stars = piece?.stars ?? null;
+    const price = unitName && priceByName ? priceByName.get(unitName) : null;
+    const costColor = borderColorForCost(price ?? null);
+    const color = costColor ?? (focused ? brick.focusColor : brick.color);
+    const box = boxForStars(stars, focused && !piece);
     const ox = x - originX;
     const oy = y - originY;
 
@@ -102,9 +137,10 @@ export function renderBrickBuffer(focusedId: string | null, labels: LabelMap = {
       put(ox + w - 1, oy + dy, { ch: box.v, color, bold: focused });
     }
 
+    if (!unitName) return;
+
     const innerWidth = w - 2;
-    const raw = labels[brick.id]?.trim() || "";
-    const label = truncateToDisplayWidth(raw, innerWidth);
+    const label = truncateToDisplayWidth(unitName, innerWidth);
     if (!label) return;
 
     const midRow = oy + Math.floor(h / 2);
