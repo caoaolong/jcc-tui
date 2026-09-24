@@ -1,0 +1,23 @@
+{
+  "name": "jcc-tui",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.tsx",
+    "typecheck": "tsc --noEmit",
+    "scrape:units": "tsx scripts/scrape-units.ts",
+    "scrape:traits": "tsx scripts/scrape-traits.ts"
+  },
+  "dependencies": {
+    "ink": "^5.2.0",
+    "playwright": "^1.50.1",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/react": "^18.3.18",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

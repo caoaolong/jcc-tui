@@ -1,0 +1,7 @@
+{
+  "$help": "将本文件内容合并到 Windows Terminal settings.json 的 profiles.defaults，或新建配置使用该字体",
+  "font": {
+    "face": "Maple Mono NF CN",
+    "size": 12
+  }
+}
